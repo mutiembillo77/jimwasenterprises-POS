@@ -4,7 +4,42 @@ import { getDB, getSyncQueue, removeFromSyncQueue, addToSyncQueue, generateId } 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+let supabaseInstance: SupabaseClient | null = null;
+
+// Lazy initialization - only create when needed, not at import time
+function getSupabase(): SupabaseClient {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('[v0] Supabase URL or key not configured. Sync operations will queue offline.');
+    // Return a mock that won't break, operations will queue for retry when online
+    return createClient('https://placeholder.supabase.co', 'placeholder_key');
+  }
+
+  try {
+    supabaseInstance = createClient(supabaseUrl, supabaseKey);
+    return supabaseInstance;
+  } catch (error) {
+    console.error('[v0] Failed to initialize Supabase:', error);
+    // Return a mock to allow app to continue
+    return createClient('https://placeholder.supabase.co', 'placeholder_key');
+  }
+}
+
+// Export getter for compatibility
+export function getSupabaseClient(): SupabaseClient {
+  return getSupabase();
+}
+
+// Export as a proxy object for compatibility with existing imports
+export const supabase = new Proxy({} as SupabaseClient, {
+  get: (_target, prop) => {
+    const client = getSupabase();
+    return (client as any)[prop];
+  },
+});
 
 let isOnline = navigator.onLine;
 let isSyncing = false;
@@ -119,7 +154,7 @@ async function triggerSync() {
 
 async function processSyncItem(item: { table_name: string; operation: string; data: Record<string, unknown> }) {
   const { table_name, operation, data } = item;
-  const table = supabase.from(table_name);
+  const table = getSupabase().from(table_name);
 
   switch (operation) {
     case 'insert':
@@ -138,7 +173,7 @@ async function syncFromRemote() {
   const db = await getDB();
 
   // Sync customers
-  const { data: customers } = await supabase.from('customers').select('*');
+  const { data: customers } = await getSupabase().from('customers').select('*');
   if (customers) {
     for (const customer of customers) {
       await db.put('customers', { ...customer, sync_status: 'synced' });
@@ -146,7 +181,7 @@ async function syncFromRemote() {
   }
 
   // Sync products
-  const { data: products } = await supabase.from('products').select('*');
+  const { data: products } = await getSupabase().from('products').select('*');
   if (products) {
     for (const product of products) {
       await db.put('products', { ...product, sync_status: 'synced' });
@@ -154,7 +189,7 @@ async function syncFromRemote() {
   }
 
   // Sync transactions
-  const { data: transactions } = await supabase.from('transactions').select('*, transaction_items(*)');
+  const { data: transactions } = await getSupabase().from('transactions').select('*, transaction_items(*)');
   if (transactions) {
     for (const tx of transactions) {
       await db.put('transactions', {
@@ -166,7 +201,7 @@ async function syncFromRemote() {
   }
 
   // Sync installment plans
-  const { data: plans } = await supabase.from('installment_plans').select('*');
+  const { data: plans } = await getSupabase().from('installment_plans').select('*');
   if (plans) {
     for (const plan of plans) {
       await db.put('installment_plans', { ...plan, sync_status: 'synced' });
@@ -174,7 +209,7 @@ async function syncFromRemote() {
   }
 
   // Sync installment payments
-  const { data: payments } = await supabase.from('installment_payments').select('*');
+  const { data: payments } = await getSupabase().from('installment_payments').select('*');
   if (payments) {
     for (const payment of payments) {
       await db.put('installment_payments', { ...payment, sync_status: 'synced' });
@@ -182,7 +217,7 @@ async function syncFromRemote() {
   }
 
   // Sync loyalty transactions
-  const { data: loyalty } = await supabase.from('loyalty_transactions').select('*');
+  const { data: loyalty } = await getSupabase().from('loyalty_transactions').select('*');
   if (loyalty) {
     for (const ltx of loyalty) {
       await db.put('loyalty_transactions', { ...ltx, sync_status: 'synced' });
@@ -190,7 +225,7 @@ async function syncFromRemote() {
   }
 
   // Sync stock movements
-  const { data: stockMovements } = await supabase.from('stock_movements').select('*');
+  const { data: stockMovements } = await getSupabase().from('stock_movements').select('*');
   if (stockMovements) {
     for (const movement of stockMovements) {
       await db.put('stock_movements', { ...movement, sync_status: 'synced' });
@@ -198,7 +233,7 @@ async function syncFromRemote() {
   }
 
   // Sync suppliers
-  const { data: suppliers } = await supabase.from('suppliers').select('*');
+  const { data: suppliers } = await getSupabase().from('suppliers').select('*');
   if (suppliers) {
     for (const supplier of suppliers) {
       await db.put('suppliers', { ...supplier, sync_status: 'synced' });
@@ -206,7 +241,7 @@ async function syncFromRemote() {
   }
 
   // Sync deliveries
-  const { data: deliveries } = await supabase.from('deliveries').select('*');
+  const { data: deliveries } = await getSupabase().from('deliveries').select('*');
   if (deliveries) {
     for (const delivery of deliveries) {
       await db.put('deliveries', { ...delivery, sync_status: 'synced' });
@@ -214,7 +249,7 @@ async function syncFromRemote() {
   }
 
   // Sync users
-  const { data: users } = await supabase.from('users').select('*');
+  const { data: users } = await getSupabase().from('users').select('*');
   if (users) {
     for (const user of users) {
       await db.put('users', { ...user, sync_status: 'synced' });
@@ -222,7 +257,7 @@ async function syncFromRemote() {
   }
 
   // Sync roles
-  const { data: roles } = await supabase.from('roles').select('*');
+  const { data: roles } = await getSupabase().from('roles').select('*');
   if (roles) {
     for (const role of roles) {
       await db.put('roles', { ...role, sync_status: 'synced' });
@@ -230,7 +265,7 @@ async function syncFromRemote() {
   }
 
   // Sync audit logs
-  const { data: auditLogs } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(500);
+  const { data: auditLogs } = await getSupabase().from('audit_logs').select('*').order('created_at', { ascending: false }).limit(500);
   if (auditLogs) {
     for (const log of auditLogs) {
       await db.put('audit_logs', { ...log, sync_status: 'synced' });
@@ -238,7 +273,7 @@ async function syncFromRemote() {
   }
 
   // Sync approval requests
-  const { data: approvalRequests } = await supabase.from('approval_requests').select('*');
+  const { data: approvalRequests } = await getSupabase().from('approval_requests').select('*');
   if (approvalRequests) {
     for (const request of approvalRequests) {
       await db.put('approval_requests', { ...request, sync_status: 'synced' });
@@ -246,29 +281,29 @@ async function syncFromRemote() {
   }
 
   // Sync settings
-  const { data: businessSettings } = await supabase.from('business_settings').select('*');
+  const { data: businessSettings } = await getSupabase().from('business_settings').select('*');
   if (businessSettings && businessSettings.length > 0) {
     await db.put('business_settings', { ...businessSettings[0], sync_status: 'synced' });
   }
 
-  const { data: mpesaSettings } = await supabase.from('mpesa_settings').select('*');
+  const { data: mpesaSettings } = await getSupabase().from('mpesa_settings').select('*');
   if (mpesaSettings && mpesaSettings.length > 0) {
     await db.put('mpesa_settings', { ...mpesaSettings[0], sync_status: 'synced' });
   }
 
-  const { data: paymentMethods } = await supabase.from('payment_methods').select('*');
+  const { data: paymentMethods } = await getSupabase().from('payment_methods').select('*');
   if (paymentMethods) {
     for (const method of paymentMethods) {
       await db.put('payment_methods', method);
     }
   }
 
-  const { data: loyaltySettings } = await supabase.from('loyalty_settings').select('*');
+  const { data: loyaltySettings } = await getSupabase().from('loyalty_settings').select('*');
   if (loyaltySettings && loyaltySettings.length > 0) {
     await db.put('loyalty_settings', { ...loyaltySettings[0], sync_status: 'synced' });
   }
 
-  const { data: receiptSettings } = await supabase.from('receipt_settings').select('*');
+  const { data: receiptSettings } = await getSupabase().from('receipt_settings').select('*');
   if (receiptSettings && receiptSettings.length > 0) {
     await db.put('receipt_settings', { ...receiptSettings[0], sync_status: 'synced' });
   }
@@ -314,7 +349,7 @@ export async function syncInsertCustomer(customer: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('customers').insert(customer as Record<string, unknown>);
+    const { error } = await getSupabase().from('customers').insert(customer as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('customers', 'insert', customer);
@@ -328,7 +363,7 @@ export async function syncUpdateCustomer(customer: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('customers').upsert(customer as Record<string, unknown>);
+    const { error } = await getSupabase().from('customers').upsert(customer as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('customers', 'update', customer);
@@ -344,11 +379,11 @@ export async function syncInsertTransaction(transaction: unknown, items: unknown
   }
 
   try {
-    const { error: txError } = await supabase.from('transactions').insert(transaction as Record<string, unknown>);
+    const { error: txError } = await getSupabase().from('transactions').insert(transaction as Record<string, unknown>);
     if (txError) throw txError;
 
     if (items.length > 0) {
-      const { error: itemsError } = await supabase.from('transaction_items').insert(items as Record<string, unknown>[]);
+      const { error: itemsError } = await getSupabase().from('transaction_items').insert(items as Record<string, unknown>[]);
       if (itemsError) throw itemsError;
     }
   } catch {
@@ -365,7 +400,7 @@ export async function syncInsertInstallmentPlan(plan: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('installment_plans').insert(plan as Record<string, unknown>);
+    const { error } = await getSupabase().from('installment_plans').insert(plan as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('installment_plans', 'insert', plan);
@@ -379,7 +414,7 @@ export async function syncUpdateInstallmentPlan(plan: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('installment_plans').upsert(plan as Record<string, unknown>);
+    const { error } = await getSupabase().from('installment_plans').upsert(plan as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('installment_plans', 'update', plan);
@@ -394,7 +429,7 @@ export async function syncInsertInstallmentPayment(payment: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('installment_payments').insert(payment as Record<string, unknown>);
+    const { error } = await getSupabase().from('installment_payments').insert(payment as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('installment_payments', 'insert', payment);
@@ -409,7 +444,7 @@ export async function syncInsertLoyaltyTransaction(loyaltyTx: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('loyalty_transactions').insert(loyaltyTx as Record<string, unknown>);
+    const { error } = await getSupabase().from('loyalty_transactions').insert(loyaltyTx as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('loyalty_transactions', 'insert', loyaltyTx);
@@ -424,7 +459,7 @@ export async function syncInsertProduct(product: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('products').insert(product as Record<string, unknown>);
+    const { error } = await getSupabase().from('products').insert(product as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('products', 'insert', product);
@@ -438,7 +473,7 @@ export async function syncUpdateProduct(product: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('products').upsert(product as Record<string, unknown>);
+    const { error } = await getSupabase().from('products').upsert(product as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('products', 'update', product);
@@ -453,7 +488,7 @@ export async function syncInsertStockMovement(movement: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('stock_movements').insert(movement as Record<string, unknown>);
+    const { error } = await getSupabase().from('stock_movements').insert(movement as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('stock_movements', 'insert', movement);
@@ -468,7 +503,7 @@ export async function syncInsertUser(user: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('users').insert(user as Record<string, unknown>);
+    const { error } = await getSupabase().from('users').insert(user as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('users', 'insert', user);
@@ -482,7 +517,7 @@ export async function syncUpdateUser(user: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('users').upsert(user as Record<string, unknown>);
+    const { error } = await getSupabase().from('users').upsert(user as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('users', 'update', user);
@@ -497,7 +532,7 @@ export async function syncInsertAuditLog(log: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('audit_logs').insert(log as Record<string, unknown>);
+    const { error } = await getSupabase().from('audit_logs').insert(log as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('audit_logs', 'insert', log);
@@ -512,7 +547,7 @@ export async function syncInsertApprovalRequest(request: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('approval_requests').insert(request as Record<string, unknown>);
+    const { error } = await getSupabase().from('approval_requests').insert(request as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('approval_requests', 'insert', request);
@@ -526,7 +561,7 @@ export async function syncUpdateApprovalRequest(request: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('approval_requests').upsert(request as Record<string, unknown>);
+    const { error } = await getSupabase().from('approval_requests').upsert(request as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('approval_requests', 'update', request);
@@ -541,7 +576,7 @@ export async function syncInsertDelivery(delivery: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('deliveries').insert(delivery as Record<string, unknown>);
+    const { error } = await getSupabase().from('deliveries').insert(delivery as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('deliveries', 'insert', delivery);
@@ -555,7 +590,7 @@ export async function syncUpdateDelivery(delivery: unknown) {
   }
 
   try {
-    const { error } = await supabase.from('deliveries').upsert(delivery as Record<string, unknown>);
+    const { error } = await getSupabase().from('deliveries').upsert(delivery as Record<string, unknown>);
     if (error) throw error;
   } catch {
     queueForSync('deliveries', 'update', delivery);
