@@ -702,7 +702,7 @@ Built with:
 **Jimwas Enterprises**  
 📧 Email: support@jimwasenterprises.com  
 🌐 Website: www.jimwasenterprises.com  
-📱 Phone: +254 (your number)
+📱 Phone: +254 0711221241
 
 ---
 
