@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { getDB, getSyncQueue, removeFromSyncQueue, addToSyncQueue, generateId } from './db';
+import { recordSyncMetric, initializeSyncMetrics } from './syncMetrics';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

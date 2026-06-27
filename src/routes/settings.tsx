@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { RoleGuard } from '../context/AuthContext';
+import { SyncMetricsPanel } from '../components/SyncMetricsPanel';
 import {
   Settings, Users, CreditCard, Building, Save, Plus, Edit, Trash2, Eye, EyeOff,
-  Check, X, Smartphone, ToggleLeft, ToggleRight, Shield, RefreshCw, AlertCircle
+  Check, X, Smartphone, ToggleLeft, ToggleRight, Shield, RefreshCw, AlertCircle, TrendingUp
 } from 'lucide-react';
 import {
   BusinessSettings,
@@ -37,7 +38,7 @@ import {
 import { createUser, updateUserRole, updateUserStatus } from '../lib/auth';
 import type { User } from '../lib/security-types';
 
-type SettingsTab = 'general' | 'users' | 'payments' | 'receipt' | 'loyalty';
+type SettingsTab = 'general' | 'users' | 'payments' | 'receipt' | 'loyalty' | 'metrics';
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -179,6 +180,7 @@ export function SettingsPage() {
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'receipt', label: 'Receipt', icon: Settings },
     { id: 'loyalty', label: 'Loyalty', icon: RefreshCw },
+    { id: 'metrics', label: 'Sync Metrics', icon: TrendingUp },
   ];
 
   if (isLoading) {
@@ -285,6 +287,18 @@ export function SettingsPage() {
             onSave={saveLoyalty}
             saving={saving}
           />
+        )}
+
+        {activeTab === 'metrics' && (
+          <RoleGuard allowedRoles={['admin']}>
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-2">Sync Performance Metrics</h2>
+                <p className="text-slate-400 mb-6">Monitor your offline sync operations and system health</p>
+              </div>
+              <SyncMetricsPanel />
+            </div>
+          </RoleGuard>
         )}
       </div>
 

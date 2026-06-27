@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline - Jimwas POS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
+        'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    h1 {
+      color: #1f2937;
+      font-size: 28px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .status {
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .status.offline {
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .status.cached {
+      color: #059669;
+      background: #d1fae5;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .status.cached.show {
+      display: block;
+    }
+
+    .features {
+      text-align: left;
+      margin: 24px 0;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .features h3 {
+      color: #1f2937;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .features ul {
+      list-style: none;
+    }
+
+    .features li {
+      color: #6b7280;
+      font-size: 14px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .features li:before {
+      content: '✓';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #10b981;
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      line-height: 20px;
+      margin-right: 12px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #059669;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #d1d5db;
+    }
+
+    .sync-status {
+      margin-top: 20px;
+      padding: 12px;
+      background: #f3f4f6;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #e5e7eb;
+      border-top-color: #10b981;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .network-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .network-indicator.online {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div class="network-indicator offline" id="networkIndicator">
+    <span class="status-dot"></span>
+    <span>Offline</span>
+  </div>
+
+  <div class="container">
+    <div class="icon">📡</div>
+    
+    <h1>You're Offline</h1>
+    
+    <div class="status offline" id="offlineStatus">
+      Network connection is unavailable
+    </div>
+
+    <div class="status cached" id="cachedStatus">
+      ✓ Cached data is available - you can continue working
+    </div>
+
+    <div class="features">
+      <h3>What you can do:</h3>
+      <ul>
+        <li>Access cached product information</li>
+        <li>View recent transactions offline</li>
+        <li>Create new sales (pending sync)</li>
+        <li>Work with customer data</li>
+        <li>All changes will sync when online</li>
+      </ul>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" onclick="checkConnection()">
+        <span id="checkBtn">Check Connection</span>
+      </button>
+      <button class="btn-secondary" onclick="goToApp()">Go to App</button>
+    </div>
+
+    <div class="sync-status" id="syncStatus" style="display: none;">
+      <span class="spinner"></span>
+      Checking connection...
+    </div>
+  </div>
+
+  <script>
+    // Check if data is cached
+    function checkCachedData() {
+      if ('indexedDB' in window) {
+        const request = indexedDB.open('jimwas-pos');
+        request.onsuccess = function (event) {
+          const db = event.target.result;
+          const tx = db.transaction(['sync_queue'], 'readonly');
+          const store = tx.objectStore('sync_queue');
+          const countRequest = store.count();
+          
+          countRequest.onsuccess = function () {
+            const hasPendingSync = countRequest.result > 0;
+            document.getElementById('cachedStatus').classList.toggle('show');
+            if (hasPendingSync) {
+              document.getElementById('syncStatus').innerHTML =
+                `<span class="spinner"></span> ${countRequest.result} pending syncs waiting...`;
+              document.getElementById('syncStatus').style.display = 'block';
+            }
+          };
+        };
+      }
+    }
+
+    // Check network connection
+    function checkConnection() {
+      const checkBtn = document.getElementById('checkBtn');
+      const syncStatus = document.getElementById('syncStatus');
+      
+      checkBtn.disabled = true;
+      checkBtn.textContent = 'Checking...';
+      syncStatus.style.display = 'block';
+
+      fetch('/manifest.json', { method: 'HEAD', cache: 'no-store' })
+        .then((response) => {
+          if (response.ok) {
+            document.getElementById('offlineStatus').style.display = 'none';
+            document.getElementById('networkIndicator').classList.add('online');
+            document.getElementById('networkIndicator').innerHTML =
+              '<span class="status-dot"></span><span>Back Online!</span>';
+            
+            syncStatus.innerHTML =
+              '<span class="spinner"></span> Connection restored! Redirecting...';
+            
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          } else {
+            throw new Error('Not online yet');
+          }
+        })
+        .catch(() => {
+          checkBtn.disabled = false;
+          checkBtn.textContent = 'Still Offline - Try Again';
+          syncStatus.innerHTML = '⚠ Still no connection. Please check your network.';
+        });
+    }
+
+    // Go back to app
+    function goToApp() {
+      window.location.href = '/';
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', () => {
+      checkCachedData();
+
+      // Check for online status changes
+      window.addEventListener('online', () => {
+        document.getElementById('offlineStatus').style.display = 'none';
+        document.getElementById('networkIndicator').classList.add('online');
+        document.getElementById('networkIndicator').innerHTML =
+          '<span class="status-dot"></span><span>Online</span>';
+        setTimeout(checkConnection, 1000);
+      });
+
+      window.addEventListener('offline', () => {
+        document.getElementById('offlineStatus').style.display = 'block';
+        document.getElementById('networkIndicator').classList.remove('online');
+      });
+    });
+  </script>
+</body>
+</html>
