@@ -16,6 +16,8 @@ export function POSTerminal() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'mobile'>('cash');
   const [amountPaid, setAmountPaid] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showSaleTypeModal, setShowSaleTypeModal] = useState(false);
+  const [saleType, setSaleType] = useState<'retail' | 'wholesale' | 'lipa' | null>(null);
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '' });
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -98,11 +100,23 @@ export function POSTerminal() {
     setCart(prevCart => prevCart.filter(item => item.id !== itemId));
   };
 
+  const handleCheckoutClick = () => {
+    if (cart.length === 0) return;
+    setShowSaleTypeModal(true);
+  };
+
+  const handleSaleTypeSelected = (type: 'retail' | 'wholesale' | 'lipa') => {
+    setSaleType(type);
+    setShowSaleTypeModal(false);
+    setShowCheckout(true);
+  };
+
   const clearCart = () => {
     setCart([]);
     setSelectedCustomer(null);
     setAmountPaid('');
     setShowCheckout(false);
+    setSaleType(null);
   };
 
   const parkSale = () => {
@@ -487,7 +501,7 @@ export function POSTerminal() {
               Park Sale
             </button>
             <button
-              onClick={() => setShowCheckout(true)}
+              onClick={handleCheckoutClick}
               disabled={cart.length === 0}
               className="py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -502,7 +516,14 @@ export function POSTerminal() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-xl w-full max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-white">Checkout</h3>
+              <div>
+                <h3 className="text-xl font-bold text-white">Checkout</h3>
+                {saleType && (
+                  <p className="text-sm text-slate-400 mt-1">
+                    Sale Type: <span className="text-emerald-400 font-medium capitalize">{saleType === 'lipa' ? 'Lipa Mdogo Mdogo' : saleType}</span>
+                  </p>
+                )}
+              </div>
               <button onClick={() => setShowCheckout(false)} className="text-slate-400 hover:text-white">
                 <X size={24} />
               </button>
@@ -751,6 +772,48 @@ export function POSTerminal() {
                 })
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sale Type Modal */}
+      {showSaleTypeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl w-full max-w-md p-6">
+            <h3 className="text-2xl font-bold text-white mb-6">Select Sale Type</h3>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => handleSaleTypeSelected('retail')}
+                className="w-full p-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg text-white font-semibold transition transform hover:scale-105"
+              >
+                <div className="text-lg">🛒 Retail</div>
+                <div className="text-sm text-blue-100 mt-1">Standard retail transaction</div>
+              </button>
+
+              <button
+                onClick={() => handleSaleTypeSelected('wholesale')}
+                className="w-full p-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-lg text-white font-semibold transition transform hover:scale-105"
+              >
+                <div className="text-lg">📦 Wholesale/Drop Shipping</div>
+                <div className="text-sm text-purple-100 mt-1">Bulk orders and wholesale pricing</div>
+              </button>
+
+              <button
+                onClick={() => handleSaleTypeSelected('lipa')}
+                className="w-full p-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-lg text-white font-semibold transition transform hover:scale-105"
+              >
+                <div className="text-lg">💳 Lipa Mdogo Mdogo</div>
+                <div className="text-sm text-amber-100 mt-1">Installment payment plan</div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowSaleTypeModal(false)}
+              className="w-full mt-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition font-medium"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
