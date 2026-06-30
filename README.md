@@ -8,11 +8,22 @@ A comprehensive, production-ready **Point of Sale (POS) system** with complete o
 
 ---
 
+## Quick Links
+
+📚 **Documentation**:
+- [System Documentation](./SYSTEM_DOCUMENTATION.md) - Complete system guide (phases, architecture, APIs)
+- [Testing Guide](./TESTING_GUIDE.md) - Unit, integration, and E2E testing
+- [Development Guide](#development-setup) - Local development setup
+
+---
+
 ## Table of Contents
 
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
+- [Development Setup](#development-setup)
+- [Project Phases](#project-phases)
 - [Usage](#usage)
 - [Architecture](#architecture)
 - [PWA & Offline](#pwa--offline)
@@ -26,7 +37,32 @@ A comprehensive, production-ready **Point of Sale (POS) system** with complete o
 
 ---
 
+## Project Phases
+
+The system was built in 6 architectural phases:
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **Phase 1** | Extended Transaction Model & Domain Models | ✅ Complete |
+| **Phase 2** | Repository Pattern & Data Layer | ✅ Complete |
+| **Phase 3** | Sales Workflows (Retail, Wholesale, Lipa Mdogo, Kyamaa) | ✅ Complete |
+| **Phase 4** | Shifts, Cash Drawer, Stock Management | ✅ Complete |
+| **Phase 5** | Reporting Engine & RBAC Dashboard | ✅ Complete |
+| **Phase 6** | Testing, Documentation, Deployment | ✅ Complete |
+
+**See [SYSTEM_DOCUMENTATION.md](./SYSTEM_DOCUMENTATION.md) for detailed phase breakdown.**
+
+---
+
 ## Features
+
+### Sales Workflows (Phase 3)
+- **Retail Sales**: Standard over-the-counter sales with tax calculation and multiple payment methods
+- **Wholesale Sales**: Bulk sales with customer requirements, discount management, and extended payment terms
+- **Lipa Mdogo (Installments)**: Payment plan recording and collection interface
+- **Kyamaa (Credit Sales)**: On-credit sales for trusted customers with manager approval
+- **Unified Payment Processing**: Shared cart and payment components across all workflows
+- **Receipt Generation**: Auto-numbered receipts with transaction tracking
 
 ### Core POS Functionality
 - **Point of Sale Terminal**: Real-time transaction processing with cart management
@@ -38,12 +74,24 @@ A comprehensive, production-ready **Point of Sale (POS) system** with complete o
 - **User Authentication**: Role-based access control (Admin, Cashier, Manager)
 - **Loyalty Program**: Points system with customer rewards
 
-### Installment Payments (Lipa Mdogo Mdogo)
-- **Payment Plans**: Create flexible installment arrangements
-- **Payment Recording**: Track individual payments with methods (cash, card, mobile)
-- **Progress Tracking**: Visual progress bars and payment status
-- **Plan Management**: Edit, complete, or cancel plans
-- **Payment History**: Complete payment audit trail
+### Operational Management (Phase 4)
+- **Shift Management**: Open/close shifts with balance tracking and duration calculation
+- **Cash Drawer**: Deposit/withdrawal tracking, reconciliation, and balance management
+- **Stock Management**: Real-time inventory tracking with low stock alerts and reorder predictions
+- **Automatic Status Indicators**: In Stock, Low Stock, Out of Stock classifications
+
+### Reporting & Analytics (Phase 5)
+- **Dashboard Metrics**: Real-time KPIs (today's sales, weekly trends, monthly targets)
+- **Sales Reports**: Detailed analysis by sale type, payment method, and date range
+- **Cashier Performance**: Individual cashier metrics, accuracy tracking, discrepancy detection
+- **Inventory Reports**: Stock status, reorder predictions, velocity analysis
+- **Custom Reports**: Flexible date range selection and CSV export
+
+### RBAC System (Phase 5)
+- **3 Predefined Roles**: Cashier, Manager, Administrator
+- **16 Granular Permissions**: Across Sales, Inventory, Reports, Users, Operations, and Admin categories
+- **Role Management**: Create custom roles with permission inheritance
+- **User Management**: Assign roles, track login history, manage access
 
 ### Offline & PWA Features
 - **Progressive Web App**: Installable on mobile and desktop

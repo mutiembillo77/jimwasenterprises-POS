@@ -431,3 +431,34 @@ export async function updateUserRole(
 
   return { success: true };
 }
+
+// Reset user password (admin only)
+export async function resetUserPassword(
+  userId: string,
+  newPassword: string,
+  resetBy: string
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getUser(userId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, error: 'Password must be at least 6 characters' };
+  }
+
+  const newPasswordHash = await hashPassword(newPassword);
+  const updatedUser: User = {
+    ...user,
+    password_hash: newPasswordHash,
+    updated_at: new Date().toISOString(),
+    sync_status: 'pending',
+  };
+
+  await saveUser(updatedUser);
+
+  // Log password reset
+  await logAuditEvent('USER_PASSWORD_RESET_BY_ADMIN', resetBy, 'user', userId, `Admin reset password for ${user.username}`);
+
+  return { success: true };
+}

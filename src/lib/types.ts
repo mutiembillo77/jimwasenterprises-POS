@@ -41,15 +41,38 @@ export interface TransactionItem {
 
 export interface Transaction {
   id: string;
+  // Sale type: 'retail', 'wholesale', 'lipa_mdogo', 'kyamaa'
+  sale_type: 'retail' | 'wholesale' | 'lipa_mdogo' | 'kyamaa';
+  // User and operational context
+  cashier_id: string;
+  branch_id?: string;
+  shift_id?: string;
+  // Customer and payment
   customer_id?: string;
   total_amount: number;
   amount_paid: number;
   change_amount: number;
   payment_method: string;
-  status: string;
+  discount_amount?: number;
+  discount_reason?: string;
+  tax_amount?: number;
+  // Transaction state
+  status: 'completed' | 'voided' | 'pending' | 'refunded' | 'suspended';
+  void_reason?: string;
+  voided_by?: string;
+  voided_at?: string;
+  refund_reason?: string;
+  refunded_by?: string;
+  refunded_at?: string;
+  // Additional context
   notes?: string;
+  receipt_number?: string;
+  reference_number?: string;
+  // Timestamps and sync
   created_at: string;
+  updated_at?: string;
   sync_status: 'pending' | 'synced';
+  // Items
   items: TransactionItem[];
 }
 
@@ -165,4 +188,96 @@ export interface StockAdjustment {
   created_at: string;
   sync_status: 'pending' | 'synced';
   local_id?: string;
+}
+
+// Domain Models for V2
+
+export interface Shift {
+  id: string;
+  cashier_id: string;
+  branch_id?: string;
+  opening_balance: number;
+  closing_balance?: number;
+  status: 'open' | 'closing' | 'closed';
+  opened_at: string;
+  closed_at?: string;
+  transactions_count: number;
+  opening_notes?: string;
+  closing_notes?: string;
+  created_at: string;
+  updated_at?: string;
+  sync_status: 'pending' | 'synced';
+}
+
+export interface CashDrawer {
+  id: string;
+  shift_id: string;
+  cashier_id: string;
+  branch_id?: string;
+  opening_balance: number;
+  cash_received: number;
+  cash_paid: number;
+  cash_on_hand: number;
+  expected_balance: number;
+  variance: number;
+  variance_reason?: string;
+  status: 'open' | 'balanced' | 'variance' | 'closed';
+  opened_at: string;
+  closed_at?: string;
+  created_at: string;
+  updated_at?: string;
+  sync_status: 'pending' | 'synced';
+}
+
+export interface PaymentTransaction {
+  id: string;
+  transaction_id: string;
+  payment_method: 'cash' | 'card' | 'mpesa' | 'bank_transfer' | 'cheque' | 'other';
+  amount: number;
+  reference_number?: string;
+  status: 'completed' | 'pending' | 'failed' | 'reversed';
+  processor_id?: string;
+  processor_name?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  sync_status: 'pending' | 'synced';
+}
+
+export interface StockTake {
+  id: string;
+  branch_id?: string;
+  counted_by: string;
+  status: 'draft' | 'in_progress' | 'completed' | 'reconciled';
+  total_variance: number;
+  variance_reason?: string;
+  started_at: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at?: string;
+  sync_status: 'pending' | 'synced';
+}
+
+export interface StockTakeItem {
+  id: string;
+  stock_take_id: string;
+  product_id: string;
+  expected_quantity: number;
+  counted_quantity: number;
+  variance: number;
+  notes?: string;
+  sync_status: 'pending' | 'synced';
+}
+
+export interface InventoryAdjustment {
+  id: string;
+  product_id: string;
+  adjustment_qty: number;
+  reason: 'damage' | 'theft' | 'recount' | 'sample' | 'expiry' | 'transfer' | 'other';
+  branch_id?: string;
+  approved_by?: string;
+  created_by: string;
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  sync_status: 'pending' | 'synced';
 }

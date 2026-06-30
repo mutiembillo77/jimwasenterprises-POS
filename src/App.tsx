@@ -12,6 +12,15 @@ import { SettingsPage } from './routes/settings';
 import { AuditPage } from './routes/audit';
 import { LedgerPage } from './routes/ledger';
 import { BackupPage } from './routes/backup';
+import { RetailWorkflow } from './routes/workflows/RetailWorkflow';
+import { WholesaleWorkflow } from './routes/workflows/WholesaleWorkflow';
+import { LipaMdogoWorkflow } from './routes/workflows/LipaMdogoWorkflow';
+import { KyamaaWorkflow } from './routes/workflows/KyamaaWorkflow';
+import { ShiftsManagement } from './routes/ShiftsManagement';
+import { CashDrawerManagement } from './routes/CashDrawerManagement';
+import { StockManagement } from './routes/StockManagement';
+import { ReportingDashboard } from './routes/ReportingDashboard';
+import { RBACDashboard } from './routes/RBACDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { initNetworkListeners, syncNow } from './lib/sync';
 
@@ -49,6 +58,14 @@ function AppContent() {
     switch (currentPage) {
       case 'pos':
         return <POSTerminal />;
+      case 'retail':
+        return <RetailWorkflow />;
+      case 'wholesale':
+        return <WholesaleWorkflow />;
+      case 'lipa-mdogo-workflow':
+        return <LipaMdogoWorkflow />;
+      case 'kyamaa':
+        return <KyamaaWorkflow />;
       case 'customers':
         return <CustomersPage />;
       case 'products':
@@ -57,10 +74,20 @@ function AppContent() {
         return <InventoryPage />;
       case 'installments':
         return <InstallmentsPage />;
+      case 'shifts':
+        return <ShiftsManagement />;
+      case 'cash-drawer':
+        return <CashDrawerManagement />;
+      case 'stock':
+        return <StockManagement />;
       case 'dashboard':
         return <DashboardPage />;
+      case 'reporting':
+        return <ReportingDashboard />;
       case 'security':
         return <SecurityDashboardPage />;
+      case 'rbac':
+        return <RBACDashboard />;
       case 'settings':
         return <SettingsPage />;
       case 'audit':

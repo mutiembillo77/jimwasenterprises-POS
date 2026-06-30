@@ -4,6 +4,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { useKeyboardScroll } from '../hooks/useKeyboardScroll';
 import { syncNow, getSyncState, subscribeToSyncState } from '../lib/sync';
 import { useAuth } from '../context/AuthContext';
+import { CollapsibleSidebar } from './CollapsibleSidebar';
 import type { User as UserType } from '../lib/security-types';
 import type { SyncState } from '../lib/sync';
 
@@ -20,6 +21,7 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
   const [syncState, setSyncState] = useState<SyncState>(getSyncState());
 
@@ -89,7 +91,7 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
   return (
     <div className="h-screen bg-slate-900 flex flex-col overflow-hidden">
       {/* Top Header Bar */}
-      <header className="bg-slate-800 border-b border-slate-700 flex-shrink-0">
+      <header className="bg-slate-800 border-b border-slate-700 flex-shrink-0 z-30">
         <div className="flex items-center justify-between px-4 lg:px-6 h-14">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -102,6 +104,15 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
               </div>
             </div>
           </div>
+
+          {/* Desktop Sidebar Toggle */}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden lg:flex items-center justify-center p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition"
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? <Menu size={20} /> : <X size={20} />}
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -330,8 +341,19 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 min-h-0">
+      {/* Main Content with Sidebar */}
+      <div className="flex-1 flex min-w-0 min-h-0">
+        {/* Collapsible Sidebar - Desktop only */}
+        <CollapsibleSidebar
+          isCollapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          userRole={user?.role_code as any}
+        />
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Page Title Bar */}
         <div className="bg-slate-800/50 border-b border-slate-700 px-4 lg:px-6 py-3 flex-shrink-0">
           <h2 className="text-lg font-semibold text-white">{currentPageLabel}</h2>
@@ -345,7 +367,8 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
         >
           {children}
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

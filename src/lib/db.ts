@@ -19,6 +19,14 @@ import type {
   LoyaltySettings,
   ReceiptSettings,
 } from './settings-types';
+import type {
+  Shift,
+  CashDrawer,
+  PaymentTransaction,
+  StockTake,
+  StockTakeItem,
+  InventoryAdjustment,
+} from './types';
 
 interface POSDatabase extends DBSchema {
   customers: {
@@ -294,6 +302,37 @@ interface POSDatabase extends DBSchema {
     key: string;
     value: ReceiptSettings;
   };
+  // V2 Domain Model stores
+  shifts: {
+    key: string;
+    value: Shift;
+    indexes: { 'by-cashier': string; 'by-status': string; 'by-opened-at': string };
+  };
+  cash_drawers: {
+    key: string;
+    value: CashDrawer;
+    indexes: { 'by-shift': string; 'by-cashier': string; 'by-status': string };
+  };
+  payment_transactions: {
+    key: string;
+    value: PaymentTransaction;
+    indexes: { 'by-transaction': string; 'by-method': string; 'by-status': string };
+  };
+  stock_takes: {
+    key: string;
+    value: StockTake;
+    indexes: { 'by-status': string; 'by-counted-by': string; 'by-started-at': string };
+  };
+  stock_take_items: {
+    key: string;
+    value: StockTakeItem;
+    indexes: { 'by-stock-take': string; 'by-product': string };
+  };
+  inventory_adjustments: {
+    key: string;
+    value: InventoryAdjustment;
+    indexes: { 'by-product': string; 'by-reason': string; 'by-created-by': string };
+  };
 }
 
 export interface TransactionItem {
@@ -307,7 +346,7 @@ export interface TransactionItem {
 }
 
 const DB_NAME = 'pos-offline-db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 let dbInstance: IDBPDatabase<POSDatabase> | null = null;
 
@@ -494,6 +533,48 @@ export async function getDB(): Promise<IDBPDatabase<POSDatabase>> {
 
       if (!db.objectStoreNames.contains('receipt_settings')) {
         db.createObjectStore('receipt_settings', { keyPath: 'id' });
+      }
+
+      // V2 Domain Model stores
+      if (!db.objectStoreNames.contains('shifts')) {
+        const shiftStore = db.createObjectStore('shifts', { keyPath: 'id' });
+        shiftStore.createIndex('by-cashier', 'cashier_id');
+        shiftStore.createIndex('by-status', 'status');
+        shiftStore.createIndex('by-opened-at', 'opened_at');
+      }
+
+      if (!db.objectStoreNames.contains('cash_drawers')) {
+        const drawerStore = db.createObjectStore('cash_drawers', { keyPath: 'id' });
+        drawerStore.createIndex('by-shift', 'shift_id');
+        drawerStore.createIndex('by-cashier', 'cashier_id');
+        drawerStore.createIndex('by-status', 'status');
+      }
+
+      if (!db.objectStoreNames.contains('payment_transactions')) {
+        const paymentStore = db.createObjectStore('payment_transactions', { keyPath: 'id' });
+        paymentStore.createIndex('by-transaction', 'transaction_id');
+        paymentStore.createIndex('by-method', 'payment_method');
+        paymentStore.createIndex('by-status', 'status');
+      }
+
+      if (!db.objectStoreNames.contains('stock_takes')) {
+        const stockStore = db.createObjectStore('stock_takes', { keyPath: 'id' });
+        stockStore.createIndex('by-status', 'status');
+        stockStore.createIndex('by-counted-by', 'counted_by');
+        stockStore.createIndex('by-started-at', 'started_at');
+      }
+
+      if (!db.objectStoreNames.contains('stock_take_items')) {
+        const itemStore = db.createObjectStore('stock_take_items', { keyPath: 'id' });
+        itemStore.createIndex('by-stock-take', 'stock_take_id');
+        itemStore.createIndex('by-product', 'product_id');
+      }
+
+      if (!db.objectStoreNames.contains('inventory_adjustments')) {
+        const adjStore = db.createObjectStore('inventory_adjustments', { keyPath: 'id' });
+        adjStore.createIndex('by-product', 'product_id');
+        adjStore.createIndex('by-reason', 'reason');
+        adjStore.createIndex('by-created-by', 'created_by');
       }
     },
   });
