@@ -1,7 +1,7 @@
 import { Transaction, TransactionItem, Customer, Product } from '../types';
 import { transactionRepository } from '../repositories/TransactionRepository';
 import { generateId } from '../db';
-import { salesWorkflows } from '../config/menuConfig';
+import { salesWorkflows } from '../../config/menuConfig';
 
 export interface SalesContext {
   saleType: 'retail' | 'wholesale' | 'lipa_mdogo' | 'kyamaa';

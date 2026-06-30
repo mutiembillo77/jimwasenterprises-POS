@@ -19,6 +19,12 @@ import {
   Cloud,
   Lock,
   BookOpen,
+  Store,
+  Briefcase,
+  Clock,
+  TrendingUp,
+  BarChart2,
+  Users2,
 } from 'lucide-react';
 import type { UserRole } from '../types/menu';
 
@@ -40,13 +46,41 @@ interface CollapsibleSidebarProps {
 }
 
 const menuItems: SidebarItem[] = [
-  // Core Operations
+  // Core Operations - Sales Workflows
   {
     id: 'pos',
     label: 'POS',
     icon: ShoppingCart,
     category: 'operations',
     roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'retail',
+    label: 'Retail Sales',
+    icon: Store,
+    category: 'operations',
+    roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'wholesale',
+    label: 'Wholesale',
+    icon: Briefcase,
+    category: 'operations',
+    roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'lipa-mdogo-workflow',
+    label: 'Lipa Mdogo (Workflow)',
+    icon: CreditCard,
+    category: 'operations',
+    roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'kyamaa',
+    label: 'Kyamaa (Credit)',
+    icon: FileText,
+    category: 'operations',
+    roles: ['manager', 'admin'],
   },
   {
     id: 'customers',
@@ -71,16 +105,44 @@ const menuItems: SidebarItem[] = [
   },
   {
     id: 'installments',
-    label: 'Lipa Mdogo',
-    icon: CreditCard,
+    label: 'Installments',
+    icon: Clock,
     category: 'operations',
     roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'shifts',
+    label: 'Shifts',
+    icon: Clock,
+    category: 'operations',
+    roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'cash-drawer',
+    label: 'Cash Drawer',
+    icon: DollarSign,
+    category: 'operations',
+    roles: ['cashier', 'manager', 'admin'],
+  },
+  {
+    id: 'stock',
+    label: 'Stock Management',
+    icon: Warehouse,
+    category: 'operations',
+    roles: ['manager', 'admin'],
   },
   // Analytics
   {
     id: 'dashboard',
     label: 'Dashboard',
     icon: BarChart3,
+    category: 'analytics',
+    roles: ['manager', 'admin'],
+  },
+  {
+    id: 'reporting',
+    label: 'Reporting',
+    icon: TrendingUp,
     category: 'analytics',
     roles: ['manager', 'admin'],
   },
@@ -111,6 +173,13 @@ const menuItems: SidebarItem[] = [
     id: 'settings',
     label: 'Settings',
     icon: Settings,
+    category: 'admin',
+    roles: ['admin'],
+  },
+  {
+    id: 'rbac',
+    label: 'RBAC Management',
+    icon: Users2,
     category: 'admin',
     roles: ['admin'],
   },
