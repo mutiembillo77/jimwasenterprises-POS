@@ -1184,25 +1184,24 @@ function UserModal({
               minLength={6}
             />
           </div>
-          </form>
-        </div>
 
-        <div className="flex gap-3 p-6 border-t border-slate-700 bg-slate-800 rounded-b-xl">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={saving}
-            className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create User'}
-          </button>
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create User'}
+            </button>
+          </div>
+          </form>
         </div>
       </div>
     </div>
