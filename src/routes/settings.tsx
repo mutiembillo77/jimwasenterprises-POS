@@ -35,7 +35,7 @@ import {
   saveUser,
   getUser,
 } from '../lib/db';
-import { createUser, updateUserRole, updateUserStatus } from '../lib/auth';
+import { createUser, updateUserRole, updateUserStatus, resetUserPassword } from '../lib/auth';
 import type { User } from '../lib/security-types';
 
 type SettingsTab = 'general' | 'users' | 'payments' | 'receipt' | 'loyalty' | 'metrics';
@@ -1002,6 +1002,7 @@ function UserModal({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const isEditing = !!user;
 
@@ -1015,6 +1016,29 @@ function UserModal({
         // Update existing user
         if (formData.role_code !== user.role_code) {
           await updateUserRole(user.id, formData.role_code as any, currentUserId!);
+        }
+
+        // Handle password change for editing users
+        if (formData.password) {
+          if (formData.password !== formData.confirm_password) {
+            setError('Passwords do not match');
+            setSaving(false);
+            return;
+          }
+
+          if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters');
+            setSaving(false);
+            return;
+          }
+
+          // Reset password as admin
+          const result = await resetUserPassword(user.id, formData.password, currentUserId!);
+          if (!result.success) {
+            setError(result.error || 'Failed to change password');
+            setSaving(false);
+            return;
+          }
         }
       } else {
         // Create new user
@@ -1056,9 +1080,9 @@ function UserModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-slate-800 rounded-xl w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 rounded-xl w-full max-w-md max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center mb-6 p-6 border-b border-slate-700">
           <h3 className="text-xl font-bold text-white">
             {isEditing ? 'Edit User' : 'Add New User'}
           </h3>
@@ -1067,14 +1091,15 @@ function UserModal({
           </button>
         </div>
 
-        {error && (
-          <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/50 border border-red-700 rounded-lg text-red-300">
-            <AlertCircle size={20} />
-            {error}
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {error && (
+            <div className="flex items-center gap-2 p-3 mb-4 bg-red-900/50 border border-red-700 rounded-lg text-red-300">
+              <AlertCircle size={20} />
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm text-slate-400 mb-2">Full Name</label>
             <input
@@ -1125,50 +1150,60 @@ function UserModal({
             </select>
           </div>
 
-          {!isEditing && (
-            <>
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Password</label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
-                  required
-                  minLength={6}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-slate-400 mb-2">Confirm Password</label>
-                <input
-                  type="password"
-                  value={formData.confirm_password}
-                  onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
-                  required
-                />
-              </div>
-            </>
-          )}
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create User'}
-            </button>
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">
+              Password {isEditing && <span className="text-xs text-slate-500">(leave blank to keep current)</span>}
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 pr-12 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+                required={!isEditing}
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
-        </form>
+
+          <div>
+            <label className="block text-sm text-slate-400 mb-2">Confirm Password</label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={formData.confirm_password}
+              onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
+              className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              required={formData.password.length > 0}
+              minLength={6}
+            />
+          </div>
+          </form>
+        </div>
+
+        <div className="flex gap-3 p-6 border-t border-slate-700 bg-slate-800 rounded-b-xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={saving}
+            className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create User'}
+          </button>
+        </div>
       </div>
     </div>
   );
