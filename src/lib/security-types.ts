@@ -143,10 +143,30 @@ export interface User {
   last_login_at?: string;
   failed_login_attempts: number;
   locked_until?: string;
+  // Password reset fields
+  password_reset_token?: string;
+  password_reset_token_expires?: string;
+  password_reset_requested_at?: string;
+  password_changed_at?: string;
+  // Password history for policy enforcement
+  password_history?: string[]; // Hashed passwords for reuse prevention
+  // Security questions
+  security_questions?: SecurityQuestion[];
+  // Session management
+  concurrent_session_limit: number;
+  last_password_change?: string;
+  password_expires_at?: string;
+  must_change_password: boolean;
   created_by?: string;
   created_at: string;
   updated_at: string;
   sync_status: 'pending' | 'synced';
+}
+
+export interface SecurityQuestion {
+  id: string;
+  question: string;
+  answer_hash: string;
 }
 
 export interface UserSession {
@@ -159,6 +179,51 @@ export interface UserSession {
   login_at: string;
   logout_at?: string;
   is_active: boolean;
+}
+
+// ============ PASSWORD RESET ============
+
+export interface PasswordResetRequest {
+  id: string;
+  user_id: string;
+  email: string;
+  token: string;
+  token_expires_at: string;
+  status: 'pending' | 'completed' | 'expired' | 'cancelled';
+  reset_method: 'email' | 'security_questions' | 'admin';
+  requested_at: string;
+  completed_at?: string;
+  ip_address?: string;
+  user_agent?: string;
+}
+
+export interface LoginAttempt {
+  id: string;
+  user_id?: string;
+  username?: string;
+  email?: string;
+  status: 'success' | 'failed' | 'suspicious' | 'blocked';
+  failure_reason?: string;
+  ip_address?: string;
+  device_fingerprint?: string;
+  attempted_at: string;
+}
+
+export interface SuspiciousLoginAlert {
+  id: string;
+  user_id: string;
+  login_attempt_id: string;
+  alert_type: 'new_device' | 'new_location' | 'unusual_time' | 'rapid_attempts' | 'brute_force';
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  ip_address: string;
+  country?: string;
+  city?: string;
+  device_info: string;
+  email_sent: boolean;
+  email_sent_at?: string;
+  user_confirmed: boolean;
+  created_at: string;
 }
 
 // ============ AUDIT TRAIL ============
