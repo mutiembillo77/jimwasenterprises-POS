@@ -2,6 +2,7 @@
 // Handles API communication with M-Pesa for STK PUSH payments
 
 import type { MpesaSettings } from './settings-types';
+import { validateCallbackURL } from './mpesa-callback-url';
 
 export interface STKPushRequest {
   phone_number: string;
@@ -43,6 +44,11 @@ class MpesaClient {
   }
 
   initialize(settings: MpesaSettings) {
+    // Validate callback URL is configured
+    if (!settings.callback_url) {
+      console.warn('[v0] M-Pesa callback URL not configured. Payment callbacks will not be received.');
+    }
+    
     this.settings = settings;
     this.baseUrl = settings.environment === 'production'
       ? 'https://api.safaricom.co.ke'
