@@ -176,23 +176,32 @@ export function LoginPage() {
                 )}
 
                 {resetStep === 'email' && (
-                  <div>
-                    <label htmlFor="reset-email" className="block text-sm font-medium text-slate-300 mb-2">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                      <input
-                        id="reset-email"
-                        type="email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                        placeholder="Enter your email"
-                        required
-                        autoFocus
-                      />
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="reset-email" className="block text-sm font-medium text-slate-300 mb-2">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <input
+                          id="reset-email"
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                          placeholder="Enter your email"
+                          required
+                          autoFocus
+                        />
+                      </div>
                     </div>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? 'Sending...' : 'Request Reset Link'}
+                    </button>
                   </div>
                 )}
 
