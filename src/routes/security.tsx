@@ -5,11 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { RoleGuard } from '../context/AuthContext';
 import {
   Shield, AlertTriangle, Users, Activity, Clock, CheckCircle, XCircle,
-  ArrowRight, FileWarning, DollarSign, Package, TrendingUp, Lock, Unlock
+  ArrowRight, FileWarning, DollarSign, Package, TrendingUp, Lock, Unlock, LogOut
 } from 'lucide-react';
 import { getSecurityDashboardSummary, resolveSecurityEvent } from '../lib/security-monitor';
 import { getAuditSummary } from '../lib/audit';
 import { getPendingApprovalsForUser } from '../lib/approvals';
+import { getActiveSessionsForUser, terminateSession, formatDeviceInfo, getLastActivityDuration } from '../lib/session-management';
 import type { SecurityEvent } from '../lib/security-types';
 
 interface SecuritySummary {
@@ -29,6 +30,7 @@ export function SecurityDashboardPage() {
   const [securitySummary, setSecuritySummary] = useState<SecuritySummary | null>(null);
   const [auditSummary, setAuditSummary] = useState<any>(null);
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +51,10 @@ export function SecurityDashboardPage() {
       setSecuritySummary(security);
       setAuditSummary(audit);
       setPendingApprovals(approvals);
+      
+      // Load active sessions for current user
+      const sessions = getActiveSessionsForUser(user.id);
+      setActiveSessions(sessions);
     } catch (error) {
       console.error('Failed to load security data:', error);
     } finally {
@@ -63,6 +69,11 @@ export function SecurityDashboardPage() {
     if (result.success) {
       loadData();
     }
+  };
+
+  const handleTerminateSession = (sessionId: string) => {
+    terminateSession(sessionId);
+    setActiveSessions(activeSessions.filter(s => s.id !== sessionId));
   };
 
   const getSeverityColor = (severity: string) => {
@@ -274,6 +285,44 @@ export function SecurityDashboardPage() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Active Sessions */}
+      <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Activity size={20} />
+          Active Sessions
+        </h2>
+        <div className="space-y-3">
+          {activeSessions.length === 0 ? (
+            <div className="p-4 text-center text-slate-400">
+              <CheckCircle size={24} className="mx-auto mb-2 opacity-50" />
+              <p>No active sessions</p>
+            </div>
+          ) : (
+            activeSessions.map(session => {
+              const { browser, os } = formatDeviceInfo(session.device_info);
+              return (
+                <div key={session.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600">
+                  <div>
+                    <p className="text-white font-medium">{browser} on {os}</p>
+                    <div className="flex gap-4 mt-1 text-xs text-slate-400">
+                      <span>Signed in: {new Date(session.created_at).toLocaleString()}</span>
+                      <span>Last active: {getLastActivityDuration(session)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleTerminateSession(session.id)}
+                    className="px-3 py-1 text-sm text-red-400 hover:text-red-300 transition flex items-center gap-1"
+                  >
+                    <LogOut size={16} />
+                    Terminate
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

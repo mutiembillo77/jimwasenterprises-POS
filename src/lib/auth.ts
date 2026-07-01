@@ -4,6 +4,7 @@
 import { generateId, saveUser, getUserByUsername, getUser, saveLoginHistory, saveSecurityEvent } from './db';
 import type { User, Role, RoleCode } from './security-types';
 import { getRoleByCode, saveRole, getAllRoles } from './db';
+import { createPasswordResetToken, validateResetToken, markTokenAsUsed, validatePasswordStrength, cleanupExpiredTokens } from './password-reset';
 
 // Session storage keys
 const SESSION_KEY = 'pos_session';
@@ -461,4 +462,81 @@ export async function resetUserPassword(
   await logAuditEvent('USER_PASSWORD_RESET_BY_ADMIN', resetBy, 'user', userId, `Admin reset password for ${user.username}`);
 
   return { success: true };
+}
+
+// Request password reset - initiates forgot password flow
+export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string; resetToken?: string }> {
+  const { getUserByEmail } = await import('./db');
+  const user = await getUserByEmail(email);
+  
+  if (!user) {
+    // Don't reveal if email exists for security
+    return { success: false, error: 'If this email exists in our system, you will receive reset instructions' };
+  }
+
+  if (!user.is_active) {
+    return { success: false, error: 'This account has been deactivated. Contact support.' };
+  }
+
+  try {
+    // Create reset token
+    const resetToken = await createPasswordResetToken(user.id);
+    
+    // Log security event
+    await logSecurityEvent('PASSWORD_RESET_REQUESTED', user.id, `Password reset requested for user ${user.username}`);
+    
+    // In production, this would send an email
+    // For now, return the token for display in development
+    return { success: true, resetToken };
+  } catch (error) {
+    return { success: false, error: 'Failed to create reset token' };
+  }
+}
+
+// Validate and complete password reset
+export async function resetPasswordWithToken(
+  token: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string; user?: User }> {
+  // Validate token
+  const resetToken = await validateResetToken(token);
+  if (!resetToken) {
+    return { success: false, error: 'Invalid or expired reset token' };
+  }
+
+  // Get user
+  const user = await getUser(resetToken.user_id);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  // Validate new password
+  const validation = validatePasswordStrength(newPassword);
+  if (!validation.valid) {
+    return { success: false, error: validation.errors.join('. ') };
+  }
+
+  // Update password
+  const newPasswordHash = await hashPassword(newPassword);
+  const updatedUser: User = {
+    ...user,
+    password_hash: newPasswordHash,
+    failed_login_attempts: 0, // Reset failed attempts
+    locked_until: undefined, // Unlock if locked
+    updated_at: new Date().toISOString(),
+    sync_status: 'pending',
+  };
+
+  await saveUser(updatedUser);
+
+  // Mark token as used
+  await markTokenAsUsed(resetToken.id);
+
+  // Log security event
+  await logSecurityEvent('PASSWORD_RESET_COMPLETED', user.id, `Password reset completed for user ${user.username}`);
+
+  // Log audit event
+  await logAuditEvent('USER_PASSWORD_RESET', user.id, 'user', user.id, 'User initiated password reset');
+
+  return { success: true, user: updatedUser };
 }

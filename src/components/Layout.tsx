@@ -265,6 +265,13 @@ export function Layout({ children, currentPage, onNavigate, user }: LayoutProps)
                         </span>
                       </div>
                       <button
+                        onClick={() => handleNavigate('profile')}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-slate-300 hover:bg-slate-600 transition border-b border-slate-600"
+                      >
+                        <User size={16} />
+                        <span>My Profile</span>
+                      </button>
+                      <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-red-400 hover:bg-slate-600 transition"
                       >

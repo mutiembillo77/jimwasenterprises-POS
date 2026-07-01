@@ -12,6 +12,7 @@ import { SettingsPage } from './routes/settings';
 import { AuditPage } from './routes/audit';
 import { LedgerPage } from './routes/ledger';
 import { BackupPage } from './routes/backup';
+import { ProfilePage } from './routes/profile';
 import { RetailWorkflow } from './routes/workflows/RetailWorkflow';
 import { WholesaleWorkflow } from './routes/workflows/WholesaleWorkflow';
 import { LipaMdogoWorkflow } from './routes/workflows/LipaMdogoWorkflow';
@@ -90,6 +91,8 @@ function AppContent() {
         return <RBACDashboard />;
       case 'settings':
         return <SettingsPage />;
+      case 'profile':
+        return <ProfilePage />;
       case 'audit':
         return <AuditPage />;
       case 'ledger':
