@@ -58,7 +58,7 @@ export const salesWorkflows: Record<string, SalesWorkflowConfig> = {
     taxApplicable: false,
     minOrderValue: 5000,
     requiresApprovalAbove: 50000,
-    supportedRoles: ['cashier', 'manager', 'admin'],
+    supportedRoles: ['manager', 'admin'],
   },
   lipa_mdogo: {
     id: 'lipa_mdogo',
@@ -141,7 +141,7 @@ const analyticsItems: MenuItem[] = [
     label: 'Dashboard',
     icon: 'BarChart3',
     route: '/dashboard',
-    roles: ['cashier', 'manager', 'admin'],
+    roles: ['manager', 'admin'],
     section: 'analytics',
     order: 1,
   },
@@ -150,7 +150,7 @@ const analyticsItems: MenuItem[] = [
     label: 'Reports',
     icon: 'FileText',
     route: '/reports',
-    roles: ['cashier', 'manager', 'admin'],
+    roles: ['manager', 'admin'],
     section: 'analytics',
     order: 2,
   },
@@ -163,7 +163,7 @@ const complianceItems: MenuItem[] = [
     label: 'Security',
     icon: 'Shield',
     route: '/security',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'compliance',
     order: 1,
   },
@@ -172,7 +172,7 @@ const complianceItems: MenuItem[] = [
     label: 'Audit Trail',
     icon: 'FileText',
     route: '/audit-trail',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'compliance',
     order: 2,
   },
@@ -181,7 +181,7 @@ const complianceItems: MenuItem[] = [
     label: 'Ledger',
     icon: 'DollarSign',
     route: '/ledger',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'compliance',
     order: 3,
   },
@@ -194,7 +194,7 @@ const administrationItems: MenuItem[] = [
     label: 'Settings',
     icon: 'Settings',
     route: '/settings',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'administration',
     order: 1,
   },
@@ -203,7 +203,7 @@ const administrationItems: MenuItem[] = [
     label: 'Shifts',
     icon: 'Clock',
     route: '/shifts',
-    roles: ['cashier', 'manager', 'admin'],
+    roles: ['manager', 'admin'],
     section: 'administration',
     order: 2,
   },
@@ -216,7 +216,7 @@ const integrationsItems: MenuItem[] = [
     label: 'Neon Database',
     icon: 'Database',
     route: 'https://console.neon.tech',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'integrations',
     order: 1,
   },
@@ -225,7 +225,7 @@ const integrationsItems: MenuItem[] = [
     label: 'Stripe Payments',
     icon: 'CreditCard',
     route: 'https://stripe.com/dashboard',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'integrations',
     order: 2,
   },
@@ -234,7 +234,7 @@ const integrationsItems: MenuItem[] = [
     label: 'AI Tools',
     icon: 'Zap',
     route: 'https://sdk.vercel.ai',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'integrations',
     order: 3,
   },
@@ -243,7 +243,7 @@ const integrationsItems: MenuItem[] = [
     label: 'Vercel Blob Storage',
     icon: 'HardDrive',
     route: 'https://vercel.com/storage/blob',
-    roles: ['cashier', 'admin'],
+    roles: ['admin'],
     section: 'integrations',
     order: 4,
   },
@@ -268,8 +268,8 @@ export const getMenuCategories = (role?: string): MenuCategory[] => {
     },
   ];
 
-  // Add compliance section for cashiers, managers and admins
-  if (role && ['cashier', 'manager', 'admin'].includes(role)) {
+  // Add compliance section for managers and admins
+  if (role && ['manager', 'admin'].includes(role)) {
     categories.push({
       id: 'compliance',
       label: 'Compliance',
@@ -279,8 +279,8 @@ export const getMenuCategories = (role?: string): MenuCategory[] => {
     });
   }
 
-  // Add administration section for cashier and admins
-  if (role && ['cashier', 'admin'].includes(role)) {
+  // Add administration section for admins only
+  if (role === 'admin') {
     categories.push({
       id: 'administration',
       label: 'Administration',
@@ -308,9 +308,9 @@ export const getMenuItemsForRole = (role?: string): MenuItem[] => {
   const allItems = [
     ...coreOperationsItems,
     ...analyticsItems,
-    ...(role && ['cashier', 'manager', 'admin'].includes(role) ? complianceItems : []),
-    ...(role && ['cashier', 'admin'].includes(role) ? administrationItems : []),
-    ...(role && ['cashier', 'admin'].includes(role) ? integrationsItems : []),
+    ...(role && ['manager', 'admin'].includes(role) ? complianceItems : []),
+    ...(role === 'admin' ? administrationItems : []),
+    ...(role === 'admin' ? integrationsItems : []),
   ];
 
   return allItems.filter((item) => item.roles.includes(role as any)).sort((a, b) => a.order - b.order);

@@ -115,7 +115,16 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<RoleCode, string[]> = {
     // Settings
     'perm-settings-view',
   ],
-  cashier: PERMISSIONS.map(p => p.id), // Full access - cashier can access everything
+  cashier: [
+    // Sales - basic access
+    'perm-sales-view', 'perm-sales-create',
+    // Inventory - view only
+    'perm-inventory-view',
+    // Customers - basic access
+    'perm-customers-view', 'perm-customers-create',
+    // Reports - view only
+    'perm-reports-view',
+  ],
 };
 
 // ============ USERS ============
