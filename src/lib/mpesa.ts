@@ -176,6 +176,7 @@ class MpesaClient {
         PartyB: this.settings.short_code,
         PhoneNumber: formattedPhone,
         CallBackURL: this.settings.callback_url || 'https://your-domain.com/api/mpesa/callback',
+        TimeoutURL: this.settings.timeout_url || 'https://your-domain.com/api/mpesa/timeout',
         AccountReference: request.account_reference || 'POS_PAYMENT',
         TransactionDesc: request.transaction_desc || 'Payment',
       };
