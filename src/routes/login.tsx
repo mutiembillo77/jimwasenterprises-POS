@@ -33,6 +33,10 @@ export function LoginPage() {
       const result = await login(username, password);
       if (!result.success) {
         setError(result.error || 'Login failed');
+        // If account is locked, show password reset option
+        if (result.error?.includes('Account locked')) {
+          setError(`${result.error} - You can reset your password to unlock your account.`);
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');

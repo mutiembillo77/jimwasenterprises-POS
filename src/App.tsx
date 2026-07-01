@@ -24,6 +24,7 @@ import { ReportingDashboard } from './routes/ReportingDashboard';
 import { RBACDashboard } from './routes/RBACDashboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { initNetworkListeners, syncNow } from './lib/sync';
+import { unlockUserByUsername } from './lib/auth';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('pos');
@@ -36,6 +37,19 @@ function AppContent() {
     syncNow().then((result) => {
       console.log('Initial sync:', result.message);
     });
+
+    // Development utilities - Expose unlock function for testing
+    (window as any).dev = {
+      unlockUser: async (username: string) => {
+        const result = await unlockUserByUsername(username);
+        if (result.success) {
+          console.log(`✓ Account "${username}" unlocked. Try logging in again.`);
+        } else {
+          console.error(`✗ Failed to unlock: ${result.error}`);
+        }
+        return result;
+      },
+    };
   }, []);
 
   // Show error state

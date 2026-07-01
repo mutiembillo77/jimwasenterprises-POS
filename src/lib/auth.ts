@@ -89,6 +89,37 @@ function isUserLockedOut(user: User): boolean {
   return lockedUntil > new Date();
 }
 
+// Unlock user account (for admin/security override)
+export async function unlockUserAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+  const user = await getUser(userId);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  const updatedUser: User = {
+    ...user,
+    failed_login_attempts: 0,
+    locked_until: undefined,
+    updated_at: new Date().toISOString(),
+    sync_status: 'pending',
+  };
+
+  await saveUser(updatedUser);
+  await logSecurityEvent('ACCOUNT_UNLOCKED', userId, 'Account manually unlocked');
+
+  return { success: true };
+}
+
+// Unlock user by username (for development)
+export async function unlockUserByUsername(username: string): Promise<{ success: boolean; error?: string }> {
+  const user = await getUserByUsername(username);
+  if (!user) {
+    return { success: false, error: 'User not found' };
+  }
+
+  return unlockUserAccount(user.id);
+}
+
 // Generate session token
 function generateToken(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 16)}`;
