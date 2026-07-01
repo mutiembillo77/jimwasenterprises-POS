@@ -80,22 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    // Return a default context to prevent initialization errors
-    // This allows components to mount during provider initialization
-    return {
-      user: null,
-      isLoading: true,
-      isAuthenticated: false,
-      error: null,
-      login: async () => ({ success: false, error: 'Auth context not ready' }),
-      logout: async () => {},
-      refreshUser: async () => {},
-    };
-  }
-  return context;
+  
+  // Always return a context object - never throw
+  return context || {
+    user: null,
+    isLoading: true,
+    isAuthenticated: false,
+    error: null,
+    login: async () => ({ success: false, error: 'Auth context not ready' }),
+    logout: async () => {},
+    refreshUser: async () => {},
+  };
 }
 
 // Permission Guard component
