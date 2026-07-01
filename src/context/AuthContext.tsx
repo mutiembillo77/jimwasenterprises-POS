@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: string | null;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -19,18 +20,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
       try {
+        setError(null);
         // Initialize security data (roles, permissions, admin user)
         await initializeSecurity();
 
         // Get current session
         const currentUser = await getCurrentUser();
         setUser(currentUser);
-      } catch (error) {
-        console.error('Auth init error:', error);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error('[v0] Auth init error:', errorMsg);
+        setError(errorMsg);
       } finally {
         setIsLoading(false);
       }
@@ -64,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        error,
         login,
         logout,
         refreshUser,
@@ -77,7 +83,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Return a default context to prevent initialization errors
+    // This allows components to mount during provider initialization
+    return {
+      user: null,
+      isLoading: true,
+      isAuthenticated: false,
+      error: null,
+      login: async () => ({ success: false, error: 'Auth context not ready' }),
+      logout: async () => {},
+      refreshUser: async () => {},
+    };
   }
   return context;
 }

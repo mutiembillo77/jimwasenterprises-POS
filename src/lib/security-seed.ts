@@ -13,18 +13,24 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 export async function isSecurityInitialized(): Promise<boolean> {
-  const roles = await getAllRoles();
-  return roles.length > 0;
+  try {
+    const roles = await getAllRoles();
+    return roles.length > 0;
+  } catch (error) {
+    console.error('[v0] Error checking security initialization:', error);
+    return false;
+  }
 }
 
 export async function initializeSecurityData(): Promise<void> {
-  // Check if already initialized
-  if (await isSecurityInitialized()) {
-    console.log('Security data already initialized');
-    return;
-  }
+  try {
+    // Check if already initialized
+    if (await isSecurityInitialized()) {
+      console.log('[v0] Security data already initialized');
+      return;
+    }
 
-  console.log('Initializing security data...');
+    console.log('[v0] Initializing security data...');
 
   // Initialize permissions
   const now = new Date().toISOString();
@@ -84,9 +90,13 @@ export async function initializeSecurityData(): Promise<void> {
 
   await saveUser(adminUser);
 
-  console.log('Security data initialized successfully');
-  console.log('Default admin user: admin / admin123');
-  console.log('IMPORTANT: Change the default admin password immediately!');
+    console.log('[v0] Security data initialized successfully');
+    console.log('[v0] Default admin user: admin / admin123');
+    console.log('[v0] IMPORTANT: Change the default admin password immediately!');
+  } catch (error) {
+    console.error('[v0] Security initialization error:', error);
+    throw error;
+  }
 }
 
 export async function createDefaultBranchManager(branchId?: string): Promise<void> {

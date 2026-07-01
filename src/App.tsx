@@ -27,7 +27,7 @@ import { initNetworkListeners, syncNow } from './lib/sync';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState('pos');
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, error } = useAuth();
 
   useEffect(() => {
     initNetworkListeners();
@@ -37,6 +37,25 @@ function AppContent() {
       console.log('Initial sync:', result.message);
     });
   }, []);
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center text-white max-w-md">
+          <div className="text-red-500 text-6xl mb-4">⚠</div>
+          <h1 className="text-2xl font-bold mb-2">Initialization Error</h1>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading state
   if (isLoading) {
