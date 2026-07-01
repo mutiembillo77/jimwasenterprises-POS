@@ -712,33 +712,51 @@ function PaymentsTab({
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-600">
-              <h3 className="text-sm font-medium text-slate-300">Callback URLs</h3>
-              <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-3">
+              <h3 className="text-sm font-medium text-slate-300">Callback & Timeout URLs</h3>
+              <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-3 space-y-2">
                 <p className="text-xs text-amber-400">
-                  These URLs will receive payment notifications. For production, use your server endpoint.
+                  <span className="font-semibold">Important:</span> These URLs receive payment notifications from M-Pesa. Must use HTTPS.
                 </p>
+                <div className="text-xs text-amber-300 space-y-1">
+                  <p><span className="font-mono bg-slate-700 px-2 py-1 rounded">Development:</span> https://[ngrok-id].ngrok.io/api/mpesa/callback</p>
+                  <p><span className="font-mono bg-slate-700 px-2 py-1 rounded">Vercel:</span> https://[project].vercel.app/api/mpesa/callback</p>
+                  <p><span className="font-mono bg-slate-700 px-2 py-1 rounded">Self-Hosted:</span> https://your-domain.com/api/mpesa/callback</p>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">Callback URL</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm text-slate-400 font-medium">Callback URL</label>
+                    <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded">Payment Success</span>
+                  </div>
                   <input
                     type="url"
                     value={mpesaSettings.callback_url || ''}
                     onChange={(e) => onMpesaChange({ ...mpesaSettings, callback_url: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
-                    placeholder="https://yourserver.com/callback"
+                    className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none text-sm"
+                    placeholder="https://your-url.com/api/mpesa/callback"
                   />
+                  <p className="text-xs text-slate-500 mt-2">Receives confirmation when payment is successful</p>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-400 mb-2">Timeout URL</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm text-slate-400 font-medium">Timeout URL</label>
+                    <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">Payment Failed/Cancelled</span>
+                  </div>
                   <input
                     type="url"
                     value={mpesaSettings.timeout_url || ''}
                     onChange={(e) => onMpesaChange({ ...mpesaSettings, timeout_url: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
-                    placeholder="https://yourserver.com/timeout"
+                    className="w-full px-4 py-3 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none text-sm"
+                    placeholder="https://your-url.com/api/mpesa/timeout"
                   />
+                  <p className="text-xs text-slate-500 mt-2">Receives notification when payment fails, times out, or is cancelled</p>
                 </div>
+              </div>
+              <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3">
+                <p className="text-xs text-blue-300">
+                  <span className="font-semibold">Need help?</span> See MPESA_URLS_SPECIFICATION.md for exact URLs for your deployment type.
+                </p>
               </div>
             </div>
 
