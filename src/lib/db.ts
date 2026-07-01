@@ -555,6 +555,10 @@ export async function getDB(): Promise<IDBPDatabase<POSDatabase>> {
         paymentStore.createIndex('by-transaction', 'transaction_id');
         paymentStore.createIndex('by-method', 'payment_method');
         paymentStore.createIndex('by-status', 'status');
+        // M-Pesa STK PUSH indexes
+        paymentStore.createIndex('by-checkout-request', 'checkout_request_id');
+        paymentStore.createIndex('by-confirmation-source', 'confirmation_source');
+        paymentStore.createIndex('by-stk-status', 'stk_status');
       }
 
       if (!db.objectStoreNames.contains('stock_takes')) {

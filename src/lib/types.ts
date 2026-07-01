@@ -241,6 +241,18 @@ export interface PaymentTransaction {
   metadata?: Record<string, unknown>;
   created_at: string;
   sync_status: 'pending' | 'synced';
+  // M-Pesa STK PUSH fields
+  checkout_request_id?: string;
+  phone_number?: string;
+  stk_status?: 'pending' | 'confirmed' | 'failed' | 'timeout';
+  webhook_received?: string;
+  polling_confirmation?: string;
+  confirmation_source?: 'webhook' | 'polling';
+  callback_data?: Record<string, unknown>;
+  completion_mode?: 'auto' | 'manual';
+  polling_attempts?: number;
+  polling_stopped_at?: string;
+  mpesa_receipt_number?: string;
 }
 
 export interface StockTake {

@@ -742,23 +742,71 @@ function PaymentsTab({
               </div>
             </div>
 
-            <div className="flex justify-end pt-4">
+            <div className="space-y-4 pt-4 border-t border-slate-600">
+              <h3 className="text-sm font-medium text-slate-300">Polling & Callback Settings</h3>
+              <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3">
+                <p className="text-xs text-blue-400">
+                  Polling automatically checks payment status every 5 seconds as a backup if webhooks fail to arrive.
+                  Maximum polling duration is 5 minutes per transaction.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Polling Enabled</label>
+                  <div className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
+                    <input
+                      type="checkbox"
+                      defaultChecked={true}
+                      disabled
+                      className="w-5 h-5"
+                    />
+                    <span className="text-white text-sm">Always enabled (automatic fallback)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Polling Interval</label>
+                  <div className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
+                    <span className="text-white text-sm font-mono">5 seconds</span>
+                    <span className="text-slate-500 text-xs">(fixed)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Max Polling Duration</label>
+                  <div className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
+                    <span className="text-white text-sm font-mono">5 minutes</span>
+                    <span className="text-slate-500 text-xs">(fixed)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-slate-400 mb-2">Webhook Timeout</label>
+                  <div className="flex items-center gap-3 p-3 bg-slate-700 rounded-lg">
+                    <span className="text-white text-sm font-mono">30 seconds</span>
+                    <span className="text-slate-500 text-xs">(before polling starts)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-700 rounded-lg p-3">
+                <p className="text-xs text-slate-400">
+                  <span className="font-medium">How it works:</span> After STK PUSH is initiated, the system starts automatic polling. 
+                  If a webhook callback arrives, polling stops immediately. If no callback within 30 seconds, polling continues 
+                  until payment is confirmed or 5 minutes pass.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-6">
               <button
                 onClick={onSaveMpesa}
                 disabled={saving}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2 disabled:opacity-50"
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 font-medium flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Save M-Pesa Settings
-                  </>
-                )}
+                <Save size={20} />
+                {saving ? 'Saving...' : 'Save M-Pesa Settings'}
               </button>
             </div>
           </div>
