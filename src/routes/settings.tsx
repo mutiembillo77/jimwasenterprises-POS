@@ -268,6 +268,7 @@ export function SettingsPage() {
             saving={saving}
             showSecret={showMpesaSecret}
             onToggleSecret={() => setShowMpesaSecret(!showMpesaSecret)}
+            message={message}
           />
         )}
 
@@ -549,6 +550,7 @@ function PaymentsTab({
   saving,
   showSecret,
   onToggleSecret,
+  message,
 }: {
   mpesaSettings: MpesaSettings;
   paymentMethods: PaymentMethodConfig[];
@@ -558,9 +560,27 @@ function PaymentsTab({
   saving: boolean;
   showSecret: boolean;
   onToggleSecret: () => void;
+  message?: { type: 'success' | 'error'; text: string } | null;
 }) {
   return (
     <div className="space-y-8">
+      {/* Success/Error Messages */}
+      {message && (
+        <div
+          className={`p-4 rounded-lg border flex items-center gap-3 ${
+            message.type === 'success'
+              ? 'bg-emerald-900/30 border-emerald-700 text-emerald-300'
+              : 'bg-red-900/30 border-red-700 text-red-300'
+          }`}
+        >
+          {message.type === 'success' ? (
+            <Check size={20} />
+          ) : (
+            <AlertCircle size={20} />
+          )}
+          <p className="text-sm font-medium">{message.text}</p>
+        </div>
+      )}
       {/* Payment Methods */}
       <div>
         <h2 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
@@ -597,10 +617,18 @@ function PaymentsTab({
       {/* M-Pesa STK Push Settings */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Smartphone size={20} />
-            M-Pesa STK Push Settings
-          </h2>
+          <div>
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Smartphone size={20} />
+              M-Pesa STK Push Settings
+            </h2>
+            {mpesaSettings.last_updated && (
+              <p className="text-xs text-slate-400 mt-1">
+                Last updated: {new Date(mpesaSettings.last_updated).toLocaleString()}
+                {mpesaSettings.last_updated_by && ` by user`}
+              </p>
+            )}
+          </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <span className="text-slate-400">Enabled</span>
             <button
@@ -817,15 +845,56 @@ function PaymentsTab({
               </div>
             </div>
 
-            <div className="flex gap-3 pt-6">
-              <button
-                onClick={onSaveMpesa}
-                disabled={saving}
-                className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 font-medium flex items-center justify-center gap-2"
-              >
-                <Save size={20} />
-                {saving ? 'Saving...' : 'Save M-Pesa Settings'}
-              </button>
+            <div className="space-y-3 pt-6 border-t border-slate-600">
+              {/* Validation warnings */}
+              {mpesaSettings.is_enabled && (
+                <div className="space-y-2">
+                  {!mpesaSettings.consumer_key && (
+                    <div className="p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg flex items-center gap-2">
+                      <AlertCircle size={18} className="text-yellow-400" />
+                      <p className="text-xs text-yellow-300">Consumer Key is required</p>
+                    </div>
+                  )}
+                  {!mpesaSettings.consumer_secret && (
+                    <div className="p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg flex items-center gap-2">
+                      <AlertCircle size={18} className="text-yellow-400" />
+                      <p className="text-xs text-yellow-300">Consumer Secret is required</p>
+                    </div>
+                  )}
+                  {!mpesaSettings.callback_url && (
+                    <div className="p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg flex items-center gap-2">
+                      <AlertCircle size={18} className="text-yellow-400" />
+                      <p className="text-xs text-yellow-300">Callback URL is required</p>
+                    </div>
+                  )}
+                  {!mpesaSettings.timeout_url && (
+                    <div className="p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg flex items-center gap-2">
+                      <AlertCircle size={18} className="text-yellow-400" />
+                      <p className="text-xs text-yellow-300">Timeout URL is required</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={onSaveMpesa}
+                  disabled={saving || (mpesaSettings.is_enabled && (!mpesaSettings.consumer_key || !mpesaSettings.consumer_secret || !mpesaSettings.callback_url || !mpesaSettings.timeout_url))}
+                  className="flex-1 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={20} />
+                      Save M-Pesa Settings
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
