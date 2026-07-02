@@ -22,7 +22,25 @@ export async function isSecurityInitialized(): Promise<boolean> {
   }
 }
 
+// In-flight guard: ensures seeding runs exactly once even when called
+// concurrently (e.g. React StrictMode invoking effects twice on mount).
+let initPromise: Promise<void> | null = null;
+
 export async function initializeSecurityData(): Promise<void> {
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = doInitializeSecurityData().catch((error) => {
+    // Reset on failure so a later attempt (e.g. Retry) can run again.
+    initPromise = null;
+    throw error;
+  });
+
+  return initPromise;
+}
+
+async function doInitializeSecurityData(): Promise<void> {
   try {
     // Check if already initialized
     if (await isSecurityInitialized()) {
@@ -50,6 +68,11 @@ export async function initializeSecurityData(): Promise<void> {
   ];
 
   for (const rd of roleData) {
+    // Skip if a role with this code already exists (guards against
+    // partial/duplicate seeding that would violate the unique 'by-code' index).
+    const existingRole = await getRoleByCode(rd.code);
+    if (existingRole) continue;
+
     const role: Role = {
       id: generateId(),
       code: rd.code,

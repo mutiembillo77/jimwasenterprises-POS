@@ -348,12 +348,14 @@ export interface TransactionItem {
 const DB_NAME = 'pos-offline-db';
 const DB_VERSION = 5;
 
-let dbInstance: IDBPDatabase<POSDatabase> | null = null;
+let dbPromise: Promise<IDBPDatabase<POSDatabase>> | null = null;
 
 export async function getDB(): Promise<IDBPDatabase<POSDatabase>> {
-  if (dbInstance) return dbInstance;
+  // Cache the in-flight promise (not just the resolved instance) so concurrent
+  // callers share a single open request instead of racing multiple openDB calls.
+  if (dbPromise) return dbPromise;
 
-  dbInstance = await openDB<POSDatabase>(DB_NAME, DB_VERSION, {
+  dbPromise = openDB<POSDatabase>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       // Customers store
       if (!db.objectStoreNames.contains('customers')) {
@@ -581,9 +583,13 @@ export async function getDB(): Promise<IDBPDatabase<POSDatabase>> {
         adjStore.createIndex('by-created-by', 'created_by');
       }
     },
+  }).catch((error) => {
+    // Reset on failure so a later call can retry opening the database.
+    dbPromise = null;
+    throw error;
   });
 
-  return dbInstance;
+  return dbPromise;
 }
 
 export function generateId(): string {
