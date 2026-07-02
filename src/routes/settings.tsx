@@ -6,7 +6,7 @@ import { RoleGuard } from '../context/AuthContext';
 import { SyncMetricsPanel } from '../components/SyncMetricsPanel';
 import {
   Settings, Users, CreditCard, Building, Save, Plus, Edit, Trash2, Eye, EyeOff,
-  Check, X, Smartphone, ToggleLeft, ToggleRight, Shield, RefreshCw, AlertCircle, TrendingUp
+  Check, X, Smartphone, ToggleLeft, ToggleRight, Shield, RefreshCw, AlertCircle, TrendingUp, Printer
 } from 'lucide-react';
 import {
   BusinessSettings,
@@ -36,6 +36,7 @@ import {
   getUser,
 } from '../lib/db';
 import { createUser, updateUserRole, updateUserStatus, resetUserPassword } from '../lib/auth';
+import { printTestPage } from '../lib/receipt';
 import type { User } from '../lib/security-types';
 
 type SettingsTab = 'general' | 'users' | 'payments' | 'receipt' | 'loyalty' | 'metrics';
@@ -963,11 +964,19 @@ function ReceiptSettingsTab({
         </div>
       </div>
 
-      <div className="flex justify-end pt-4 border-t border-slate-700">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-slate-700">
+        <button
+          onClick={printTestPage}
+          type="button"
+          className="px-6 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition flex items-center justify-center gap-2"
+        >
+          <Printer size={18} />
+          Print Test Page
+        </button>
         <button
           onClick={onSave}
           disabled={saving}
-          className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2 disabled:opacity-50"
+          className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {saving ? (
             <>

@@ -162,3 +162,32 @@ export function printReceipt(data: ReceiptData): void {
   printWindow.document.write(html);
   printWindow.document.close();
 }
+
+/**
+ * Build a sample receipt used to verify the printer is configured correctly.
+ */
+export function buildTestReceipt(): ReceiptData {
+  return {
+    receiptNumber: 'TEST-0000',
+    createdAt: new Date().toISOString(),
+    cashierName: 'Test Cashier',
+    customerName: 'Test Customer',
+    saleType: null,
+    items: [
+      { product_name: 'Test Item A', quantity: 2, unit_price: 150, subtotal: 300 },
+      { product_name: 'Test Item B', quantity: 1, unit_price: 450, subtotal: 450 },
+    ],
+    totalAmount: 750,
+    amountPaid: 1000,
+    changeAmount: 250,
+    paymentMethod: 'cash',
+    loyaltyPointsEarned: 7,
+  };
+}
+
+/**
+ * Print a sample test receipt so users can confirm their printer works.
+ */
+export function printTestPage(): void {
+  printReceipt(buildTestReceipt());
+}
