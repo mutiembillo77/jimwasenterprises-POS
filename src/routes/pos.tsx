@@ -1,12 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Minus, Trash2, Search, User, ShoppingCart, Banknote, CreditCard, Smartphone, X, Package, Archive, ArchiveRestore } from 'lucide-react';
+import { Plus, Minus, Trash2, Search, User, ShoppingCart, Banknote, CreditCard, Smartphone, X, Package, Archive, ArchiveRestore, Printer, CheckCircle } from 'lucide-react';
 import { generateId, saveProduct, getAllProducts, getAllCustomers, saveCustomer, saveTransaction, saveLoyaltyTransaction } from '../lib/db';
 import { syncInsertTransaction, syncInsertCustomer, syncUpdateCustomer, syncInsertLoyaltyTransaction, syncInsertProduct } from '../lib/sync';
+import { printReceipt, type ReceiptData } from '../lib/receipt';
+import { useAuth } from '../context/AuthContext';
 import type { Product, Customer, CartItem } from '../lib/types';
 
 const LOYALTY_POINTS_PER_SHILLING = 100;
 
 export function POSTerminal() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -24,6 +27,7 @@ export function POSTerminal() {
   const [newProduct, setNewProduct] = useState({ name: '', price: '', stock: '', category: '' });
   const [parkedSales, setParkedSales] = useState<Array<{id: string; cart: CartItem[]; customer: Customer | null; timestamp: string}>>([]);
   const [showParkedSales, setShowParkedSales] = useState(false);
+  const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null);
 
   useEffect(() => {
     loadData();
@@ -195,9 +199,20 @@ export function POSTerminal() {
 
     const paid = parseFloat(amountPaid) || cartTotal;
     const now = new Date().toISOString();
+    const receiptNumber = generateReceiptNumber();
+
+    const transactionItems = cart.map(item => ({
+      id: generateId(),
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      subtotal: item.subtotal,
+    }));
 
     const transaction = {
       id: generateId(),
+      receipt_number: receiptNumber,
       customer_id: selectedCustomer?.id,
       total_amount: cartTotal,
       amount_paid: paid,
@@ -206,14 +221,27 @@ export function POSTerminal() {
       status: 'completed',
       created_at: now,
       sync_status: 'pending' as const,
-      items: cart.map(item => ({
-        id: generateId(),
-        product_id: item.product_id,
+      items: transactionItems,
+    };
+
+    // Build the receipt for this sale before the cart is cleared.
+    const receipt: ReceiptData = {
+      receiptNumber,
+      createdAt: now,
+      cashierName: user?.full_name || user?.username,
+      customerName: selectedCustomer?.name,
+      saleType,
+      items: transactionItems.map(item => ({
         product_name: item.product_name,
         quantity: item.quantity,
         unit_price: item.unit_price,
         subtotal: item.subtotal,
       })),
+      totalAmount: cartTotal,
+      amountPaid: paid,
+      changeAmount: change,
+      paymentMethod,
+      loyaltyPointsEarned: selectedCustomer ? loyaltyPointsToEarn : 0,
     };
 
     await saveTransaction(transaction);
@@ -263,7 +291,13 @@ export function POSTerminal() {
 
     clearCart();
     loadData();
-    alert('Transaction completed successfully!');
+    setLastReceipt(receipt);
+  };
+
+  const generateReceiptNumber = () => {
+    const date = new Date();
+    const timestamp = date.getTime().toString().slice(-6);
+    return `RCP-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${timestamp}`;
   };
 
   return (
@@ -591,6 +625,63 @@ export function POSTerminal() {
                 className="w-full py-4 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition"
               >
                 Complete Sale
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt Modal */}
+      {lastReceipt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-xl w-full max-w-md p-6">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-14 h-14 rounded-full bg-emerald-600/20 flex items-center justify-center mb-3">
+                <CheckCircle size={32} className="text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Sale Completed</h3>
+              <p className="text-sm text-slate-400 mt-1">Receipt {lastReceipt.receiptNumber}</p>
+            </div>
+
+            {/* Receipt preview */}
+            <div className="bg-slate-900 rounded-lg p-4 space-y-2 max-h-64 overflow-y-auto">
+              {lastReceipt.items.map((item, index) => (
+                <div key={index} className="flex justify-between text-sm">
+                  <span className="text-slate-300">
+                    {item.product_name} <span className="text-slate-500">x{item.quantity}</span>
+                  </span>
+                  <span className="text-white">KES {item.subtotal.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="border-t border-slate-700 pt-2 mt-2 space-y-1">
+                <div className="flex justify-between font-bold">
+                  <span className="text-white">Total</span>
+                  <span className="text-emerald-400">KES {lastReceipt.totalAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-slate-400">
+                  <span>Paid ({lastReceipt.paymentMethod})</span>
+                  <span>KES {lastReceipt.amountPaid.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-sm text-slate-400">
+                  <span>Change</span>
+                  <span>KES {lastReceipt.changeAmount.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button
+                onClick={() => printReceipt(lastReceipt)}
+                className="py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+              >
+                <Printer size={18} />
+                Print Receipt
+              </button>
+              <button
+                onClick={() => setLastReceipt(null)}
+                className="py-3 bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-600 transition"
+              >
+                New Sale
               </button>
             </div>
           </div>
